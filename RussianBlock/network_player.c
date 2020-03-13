@@ -25,6 +25,8 @@ int UserOP2(INPUT_RECORD inp);
 void repaint2(char*);
 void dou_sendcon();
 void spawnrand();
+void flushfullline(BOOL spe);
+BOOL isContinue(unsigned short block, COORD blockpos);
 
 int dou_play() {
 	WSADATA wdata;
@@ -54,10 +56,6 @@ BOOL dou_msg(char* msg, unsigned int runstate) {
 	if (runstate != RUNSTATE_CONNECTED) return TRUE;
 	if (!strncmp(msg, "blocks:", strlen("blocks:"))) {
 		repaint2(msg);
-	}else if (!strcmp(msg, "connected")) {
-		Dou_Init();
-		spawnrand();
-		rectimer = GetTickCount64();
 	}
 	else if (!strncmp(msg, "gameover:", strlen("gameover:"))) {
 
@@ -66,23 +64,25 @@ BOOL dou_msg(char* msg, unsigned int runstate) {
 	return TRUE;
 }
 
-BOOL dou_timer() {
+BOOL dou_timer(BOOL isFirst) {
+	if (isFirst) {
+		Dou_Init();
+		spawnrand();
+		rectimer = GetTickCount64();
+		return TRUE;
+	}
 	if (GetTickCount64() >= rectimer + JUMPDIFTIME) {
 		if (abletoset(curblock, (COORD) { blockpos.X, blockpos.Y + 1 })) {
 			blockpos.Y++; 
 		}
 		else {
-			BOOL isfinished = FALSE;
-			if (curblock & 0xf000) if (blockpos.Y <= 3) isfinished = TRUE;
-			if (curblock & 0x0f00) if (blockpos.Y <= 2) isfinished = TRUE;
-			if (curblock & 0x00f0) if (blockpos.Y <= 1) isfinished = TRUE;
-			if (curblock & 0x000f) if (blockpos.Y <= 0) isfinished = TRUE;
-			if (isfinished) {
+			if (!isContinue(curblock,blockpos)) {
 				send(sock, "gameover:", strlen("gameover:"), 0);
 				return FALSE;
 			}
 			layblock();
 			spawnrand();
+			flushfullline(TRUE);
 		}
 		repaint2(recvmsg);
 		dou_sendcon();
@@ -183,7 +183,7 @@ int UserOP2(INPUT_RECORD inp) {
 			dou_sendcon(); return 1;
 		}
 		else {
-			layblock(); spawnrand();
+			layblock(); spawnrand(); flushfullline(TRUE);
 			repaint2(recvmsg);
 			dou_sendcon(); 
 			return 1;
@@ -207,7 +207,7 @@ int UserOP2(INPUT_RECORD inp) {
 		break;
 	case VK_SPACE:
 		while (abletoset(curblock, (COORD) { blockpos.X, ++blockpos.Y })); --blockpos.Y;
-		layblock(); repaint2(recvmsg);
+		layblock(); spawnrand(); flushfullline(TRUE); repaint2(recvmsg);
 		dou_sendcon();
 		break;
 	}
@@ -247,7 +247,7 @@ void repaint2(char *msg) {
 		while (num--) WriteConsole(sOut, L"йд", 2, &recnum, NULL);
 		WriteConsole(sOut, L"й╝", 2, &recnum, NULL);
 		int recvblock, tmpblockx, tmpblocky,recvcolor;
-		sscanf_s(msg, "%4x%4x%4x%4x", &recvblock, &tmpblockx, &tmpblocky,&recvcolor);
+		sscanf_s(msg, "%8x%8x%8x%8x", &recvblock, &tmpblockx, &tmpblocky,&recvcolor);
 		short blockx = (short)tmpblockx, blocky = (short)tmpblocky;
 		SetConsoleTextAttribute(sOut, recvcolor);
 		for (num2 = blocky + 3; num2 >= blocky; num2--) {
@@ -288,8 +288,8 @@ void repaint2(char *msg) {
 		num = WIDTH;
 		while (num--) WriteConsole(sOut, L"йд", 1, &recnum, NULL);
 		WriteConsole(sOut, L"й╝", 1, &recnum, NULL);
-		unsigned int recvblock, tmpblockx, tmpblocky, recvcolor;
-		sscanf_s(msg, "%4x%4x%4x%4x", &recvblock, &tmpblockx, &tmpblocky, &recvcolor);
+		int recvblock, tmpblockx, tmpblocky, recvcolor;
+		sscanf_s(msg, "%8x%8x%8x%8x", &recvblock, &tmpblockx, &tmpblocky, &recvcolor);
 		SetConsoleTextAttribute(sOut, recvcolor);
 		short blockx = (short)tmpblockx, blocky = (short)tmpblocky;
 		for (num2 = blocky + 3; num2 >= blocky; num2--) {
@@ -304,6 +304,9 @@ void repaint2(char *msg) {
 		}
 	}
 	repaint();
+	CHAR_INFO wstr[(4 * WIDTH + 12) * (HEIGTH + 3)];
+	ReadConsoleOutput(hOut, wstr, (COORD) { 4 * WIDTH + 12, HEIGTH + 3 }, (COORD) { 0, 0 }, & (SMALL_RECT){0, 0, 4 * WIDTH + 11, HEIGTH + 2});
+	WriteConsoleOutput(sOut, wstr, (COORD) { 4 * WIDTH + 12, HEIGTH + 3 }, (COORD) { 0, 0 }, & (SMALL_RECT){0, 0, 4 * WIDTH + 11, HEIGTH + 2});
 	//SetConsoleActiveScreenBuffer(sOut);
 	//FlushFileBuffers(sOut);
 	//exchange(hOut, sOut, HANDLE);
@@ -318,6 +321,6 @@ void dou_sendcon() {
 			tmp += 2;
 		}
 	}
-	sprintf_s(tmp, 33, "%04x%04x%04x%04x", curblock, blockpos.X, blockpos.Y, blockcolor);
+	sprintf_s(tmp, 33, "%08x%08x%08x%08x", (unsigned)curblock, (int)blockpos.X, (int)blockpos.Y, (unsigned)blockcolor);
 	send(sock, msg, MSG_LEN, 0);
 }

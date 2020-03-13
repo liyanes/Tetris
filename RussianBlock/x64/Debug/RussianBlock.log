@@ -1,0 +1,28 @@
+﻿  connect.c
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\connect.c(15,4): error C4235: 使用了非标准扩展: 不支持在此结构上使用“__asm”关键字
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\connect.c(15,14): error C2143: 语法错误: 缺少“;”(在“常数”的前面)
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\connect.c(15,14): warning C4091: “ ”: 没有声明变量时忽略“int”的左侧
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\connect.c(105,46): warning C4267: “函数”: 从“size_t”转换到“int”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\connect.c(165,46): warning C4267: “函数”: 从“size_t”转换到“int”，可能丢失数据
+  double_player.c
+  global.c
+  main.c
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\main.c(30,65): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\main.c(34,71): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\main.c(42,53): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\main.c(24,1): warning C4267: “初始化”: 从“size_t”转换到“unsigned int”，可能丢失数据
+  network_player.c
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\network_player.c(81,48): warning C4267: “函数”: 从“size_t”转换到“int”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\network_player.c(101,73): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\network_player.c(103,207): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+  single_player.c
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(68,1): warning C4267: “初始化”: 从“size_t”转换到“unsigned int”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(75,1): warning C4267: “初始化”: 从“size_t”转换到“unsigned int”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(91,51): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(94,43): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(97,51): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(100,43): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(103,75): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(106,43): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(111,67): warning C4267: “函数”: 从“size_t”转换到“DWORD”，可能丢失数据
+  正在生成代码...

@@ -113,6 +113,43 @@ void ShowEnd() {
 	if (_getch());
 	return;
 }
+void flushfullline(BOOL spe) {
+	unsigned short line = 0;
+	for (; line < HEIGTH; line++) {
+		unsigned short index = 0;
+		while (conblock[index][line] && index++ < WIDTH);
+		if (index >= WIDTH) {//满行
+			grade++;//计分板+1
+			unsigned short tmpline, tmpx;
+			for (tmpx = 0; tmpx < WIDTH; tmpx++) {
+				tmpline = line;
+				while (tmpline) {
+					conblock[tmpx][tmpline] = conblock[tmpx][tmpline - 1];
+					tmpline--;
+				}
+				*conblock[tmpx] = 0;
+			}
+			if (spe) {
+				//特效
+				repaint();
+				SetConsoleTextAttribute(hOut, SCOLOR_BACKGROUND);
+				unsigned int recnum;
+				for (tmpx = 0; tmpx < WIDTH / 2; tmpx++) {
+					//SetConsoleCursorPosition(hOut, (COORD) { WIDTH - 2 * tmpx, line + 1 });
+					//WriteConsole(hOut, L"  ", 2, &recnum, NULL);
+					FillConsoleOutputCharacter(hOut, L' ', 2, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
+					FillConsoleOutputAttribute(hOut, 0, 1, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
+					//SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 });
+					//WriteConsole(hOut, L"  ", 2, &recnum, NULL);
+					FillConsoleOutputCharacter(hOut, L' ', 2, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
+					FillConsoleOutputAttribute(hOut, 0, 1, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
+					FlushFileBuffers(hOut);
+					Sleep(20);
+				}
+			}
+		}
+	}
+}
 void repaint() {
 	unsigned int recnum, record;
 	short i, i2;
@@ -302,6 +339,12 @@ int UserOP(INPUT_RECORD inp) {
 	}
 	return 0;//继续执行掉落操作
 }
+BOOL isContinue(unsigned short block, COORD blockpos) {
+	if (block & 0xf000) if (blockpos.Y <= 0) return 0;
+	if (block & 0x0f00) if (blockpos.Y <= -1) return 0;
+	if (block & 0x00f0) if (blockpos.Y <= -2) return 0;
+	if (block & 0x000f) if (blockpos.Y <= -3) return 0;
+}
 #pragma warning(disable:28159)
 void RunTimer() {
 	int gamestate = 1;
@@ -334,43 +377,8 @@ void RunTimer() {
 			repaint();
 		} while (abletoset(curblock, blockpos));
 		//判断满行与游戏结束
-		unsigned short line = 0;
-		for (; line < HEIGTH; line++) {
-			unsigned short index = 0;
-			while (conblock[index][line] && index++ < WIDTH);
-			if (index >= WIDTH) {//满行
-				grade++;//计分板+1
-				unsigned short tmpline, tmpx;
-				for (tmpx = 0; tmpx < WIDTH; tmpx++) {
-					tmpline = line;
-					while (tmpline) {
-						conblock[tmpx][tmpline] = conblock[tmpx][tmpline - 1];
-						tmpline--;
-					}
-					*conblock[tmpx] = 0;
-				}
-				//特效
-				repaint();
-				SetConsoleTextAttribute(hOut, SCOLOR_BACKGROUND);
-				unsigned int recnum;
-				for (tmpx = 0; tmpx < WIDTH / 2; tmpx++) {
-					//SetConsoleCursorPosition(hOut, (COORD) { WIDTH - 2 * tmpx, line + 1 });
-					//WriteConsole(hOut, L"  ", 2, &recnum, NULL);
-					FillConsoleOutputCharacter(hOut, L' ', 2, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
-					FillConsoleOutputAttribute(hOut, 0, 1, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
-					//SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 });
-					//WriteConsole(hOut, L"  ", 2, &recnum, NULL);
-					FillConsoleOutputCharacter(hOut, L' ', 2, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
-					FillConsoleOutputAttribute(hOut, 0, 1, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
-					FlushFileBuffers(hOut);
-					Sleep(20);
-				}
-			}
-		}
-		if (curblock & 0xf000) if (blockpos.Y <= 0) gamestate = 0;
-		if (curblock & 0x0f00) if (blockpos.Y <= -1) gamestate = 0;
-		if (curblock & 0x00f0) if (blockpos.Y <= -2) gamestate = 0;
-		if (curblock & 0x000f) if (blockpos.Y <= -3) gamestate = 0;
+		flushfullline(TRUE);
+		gamestate = isContinue(curblock, blockpos);
 	} while (gamestate);
 }
 #pragma warning(default:28195)

@@ -8,17 +8,39 @@
 SOCKET sock;
 static SOCKET tmpsock;
 char recvmsg[MSG_LEN + 1];
+HANDLE recvstate = NULL;
+HANDLE recvcont = NULL;
+HANDLE recvwait = NULL;
 static unsigned _stdcall connect_player_s(void* pArguments) {
-	memset(recvmsg, 0, sizeof(char) * MSG_LEN);
-	if (recv(sock, recvmsg, MSG_LEN, 0) == SOCKET_ERROR) {
-		if ((errno = WSAGetLastError()) == 10057) {
-			__asm int 3;
+	/*
+	while (1) {
+		if (recvcont != NULL) WaitForSingleObject(recvcont, INFINITE);
+		recvstate = CreateMutex(0, FALSE, L"RussianBlock-RecvState");
+		if (!recvstate) {
+			errno = GetLastError();
+			return 0;
 		}
+		ReleaseMutex(recvwait);
+		if (recv(sock, recvmsg, MSG_LEN, 0) == SOCKET_ERROR) {
+			errno = WSAGetLastError();
+			ReleaseMutex(recvstate);
+			return 0;
+		}
+		recvcont = CreateMutex(0, FALSE, L"RussianBlock-RecvFinished");
+		if (!recvcont) {
+			errno = GetLastError();
+			return 0;
+		}
+		ReleaseMutex(recvstate);
+	}*/
+	switch (recv(sock, recvmsg, MSG_LEN, 0)) {
+	case SOCKET_ERROR:
+		errno = WSAGetLastError();
+		return -1;
+	case 0:
 		return 0;
 	}
-	else {
-		return 1;
-	}
+	return 1;
 }
 
 static unsigned _stdcall connect_player_sac(void* pArguments) {
@@ -46,7 +68,7 @@ struct in_addr* GetLocalIP()
 }
 #pragma warning(disable:6387)
 #pragma warning(disable:6001)
-int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* message, unsigned int runstate), BOOL (*state)(INPUT_RECORD inp,unsigned int runstate), BOOL (*timer)()) {
+int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* message, unsigned int runstate), BOOL (*state)(INPUT_RECORD inp,unsigned int runstate), BOOL (*timer)(BOOL)) {
 	memset(recvmsg, 0, MSG_LEN + 1);
 	tmpsock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -102,13 +124,15 @@ int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* m
 			Sleep(10);
 		}
 		CloseHandle(hTh);
-		send(sock, "connected", strlen("connected"), 0);
+		timer(TRUE);
+		//recvwait = CreateMutex(0, FALSE, NULL);
 		hTh = (HANDLE)_beginthreadex(NULL, 0, connect_player_s, NULL, 0, NULL);
 		if (!hTh) {
 			closesocket(tmpsock);
 			closesocket(sock);
 			return 3;
 		}
+		//WaitForSingleObject(recvwait,INFINITE);
 		while (1) {
 			unsigned int evenum; unsigned int ret;
 			GetNumberOfConsoleInputEvents(hIn, &evenum);
@@ -123,30 +147,68 @@ int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* m
 					return 0;
 				}
 			}
-			GetExitCodeThread(hTh, &ret);
-			if (ret != STILL_ACTIVE) {
-				CloseHandle(hTh);
-				if (!ret) {
+			if (!timer(FALSE)) {
+				closesocket(sock);
+				return 0;
+			}
+			/*
+			if ((ret = WaitForSingleObject(recvstate, 10)) == WAIT_TIMEOUT){
+				int thret;
+				GetExitCodeThread(hTh, &thret);
+				if (thret != STILL_ACTIVE) {
+					CloseHandle(hTh);
+					CloseHandle(recvstate);
 					closesocket(sock);
 					closesocket(tmpsock);
 					return 4;
 				}
-				if (!deal(recvmsg,RUNSTATE_CONNECTED)) {
+			}
+			else {
+				ret = GetLastError();
+				if (recvstate == NULL || recvcont == NULL) {
+					CloseHandle(hTh);
+					CloseHandle(recvstate);
+					CloseHandle(recvcont);
 					closesocket(sock);
+					closesocket(tmpsock);
+					return 5;
+				}
+				if (!deal(recvmsg, RUNSTATE_CONNECTED)) {
+					CloseHandle(hTh);
+					CloseHandle(recvstate);
+					CloseHandle(recvcont);
+					closesocket(sock);
+					closesocket(tmpsock);
+					return 0;
+				}
+				recvwait = CreateMutex(0, FALSE, L"RussianBlock-Wait");
+				ReleaseMutex(recvcont);
+			}*/
+			if (WaitForSingleObject(hTh, 10) != WAIT_TIMEOUT) {
+				GetExitCodeThread(hTh, &ret);
+				CloseHandle(hTh);
+				switch (ret) {
+				case 0:
+					closesocket(sock);
+					closesocket(tmpsock);
+					return 6;
+				case -1:
+					closesocket(sock);
+					closesocket(tmpsock);
+					return 4;
+				}
+				if (!deal(recvmsg, RUNSTATE_CONNECTED)) {
+					closesocket(sock);
+					closesocket(tmpsock);
 					return 0;
 				}
 				hTh = (HANDLE)_beginthreadex(NULL, 0, connect_player_s, NULL, 0, NULL);
 				if (!hTh) {
-					closesocket(sock);
 					closesocket(tmpsock);
+					closesocket(sock);
 					return 3;
 				}
 			}
-			if (!timer()) {
-				closesocket(sock);
-				return 0;
-			}
-			Sleep(10);
 		}
 	}
 	else {
@@ -157,12 +219,13 @@ int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* m
 			return 2;
 		}
 		INPUT_RECORD inp;
+		//recvwait = CreateMutex(0, FALSE, NULL);
 		HANDLE hTh = (HANDLE)_beginthreadex(NULL, 0, &connect_player_s, NULL, 0, NULL);
 		if (!hTh) {
 			closesocket(sock);
 			return 3;
 		}
-		send(sock, "connected", strlen("connected"), 0);
+		timer(TRUE);
 		while (1) {
 			unsigned int evenum;unsigned int ret;
 			GetNumberOfConsoleInputEvents(hIn, &evenum);
@@ -175,28 +238,63 @@ int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* m
 					return 0;
 				}
 			}
-			GetExitCodeThread(hTh, &ret);
-			if (ret != STILL_ACTIVE) {
-				if (ret == 0) {//Á¬½Ó´íÎó
+			if (!timer(FALSE)) {
+				closesocket(sock);
+				return 0;
+			}
+			/*
+			WaitForSingleObject(recvwait, INFINITE);
+			CloseHandle(recvwait);
+			if ((ret = WaitForSingleObject(recvstate, 10)) == WAIT_TIMEOUT) {
+				int thret;
+				GetExitCodeThread(hTh, &thret);
+				if (thret != STILL_ACTIVE) {
+					CloseHandle(hTh);
+					CloseHandle(recvstate);
 					closesocket(sock);
-					return 3;
+					return 4;
 				}
-				if (!deal(recvmsg,RUNSTATE_CONNECTED)) {
+			}
+			else {
+				ret = GetLastError();
+				if (recvstate == NULL || recvcont == NULL) {
+					CloseHandle(hTh);
+					CloseHandle(recvstate);
+					CloseHandle(recvcont);
+					closesocket(sock);
+					return 5;
+				}
+				if (!deal(recvmsg, RUNSTATE_CONNECTED)) {
+					CloseHandle(hTh);
+					CloseHandle(recvstate);
+					CloseHandle(recvcont);
 					closesocket(sock);
 					return 0;
 				}
+				recvwait = CreateMutex(0, FALSE, L"RussianBlock-Wait");
+				ReleaseMutex(recvcont);
+			}*/
+			if (WaitForSingleObject(hTh, 10) != WAIT_TIMEOUT) {
+				GetExitCodeThread(hTh, &ret);
 				CloseHandle(hTh);
-				hTh = (HANDLE)_beginthreadex(NULL, 0, &connect_player_s, NULL, 0, NULL);
+				switch (ret) {
+				case 0:
+					closesocket(sock);
+					return 6;
+				case -1:
+					closesocket(sock);
+					return 4;
+				}
+				if (!deal(recvmsg, RUNSTATE_CONNECTED)) {
+					closesocket(sock);
+					return 0;
+				}
+				hTh = (HANDLE)_beginthreadex(NULL, 0, connect_player_s, NULL, 0, NULL);
 				if (!hTh) {
 					closesocket(sock);
 					return 3;
 				}
 			}
-			if (!timer()) {
-				closesocket(sock);
-				return 0;
-			}
-			Sleep(10);
 		}
 	}
 	return 0;
