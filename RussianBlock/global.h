@@ -13,7 +13,7 @@
 #define SCOLOR_BACKGROUND 0
 
 #define START ((WIDTH-4)/2)
-#define SLEEPCLOCK (long)(pow(0.9, grade) * JUMPDIFTIME)
+#define SLEEPCLOCK (long)(1/(log(grade+3)/log(3) + pow(1.02,grade)) * JUMPDIFTIME)
 #define exchange(a, b, type) {type exctmp = a; a = b; b = exctmp;}
 
 extern CONSOLE_SCREEN_BUFFER_INFOEX sinfo;

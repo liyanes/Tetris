@@ -1,5 +1,0 @@
-﻿  network_player.c
-  single_player.c
-  正在生成代码...
-C:\Users\admin\source\repos\RussianBlock\RussianBlock\single_player.c(347): warning C4715: “isContinue”: 不是所有的控件路径都返回值
-  RussianBlock.vcxproj -> C:\Users\admin\source\repos\RussianBlock\Debug\RussianBlock.exe

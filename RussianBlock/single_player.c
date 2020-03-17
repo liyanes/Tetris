@@ -68,14 +68,12 @@ void WaitForStart() {
 	unsigned int recnum = wcslen(L"按下任意键开始");
 	SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 - recnum, 4 });
 	WriteConsole(hOut, L"按下任意键开始", recnum, &recnum, NULL);
-	FlushFileBuffers(hOut);
 	if (_getch()) return;
 }
 void WaitForContinue() {
 	unsigned int recnum = wcslen(L"按下任意键继续");
 	SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 - recnum, 4 });
 	WriteConsole(hOut, L"按下任意键继续", recnum, &recnum, NULL);
-	FlushFileBuffers(hOut);
 	if (_getch()) return;
 }
 void ShowEnd() {
@@ -109,7 +107,6 @@ void ShowEnd() {
 
 	SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 	WriteConsole(hOut, L"任意键继续", wcslen(L"任意键继续"), &recnum, NULL);
-	FlushFileBuffers(hOut);
 	if (_getch());
 	return;
 }
@@ -344,6 +341,7 @@ BOOL isContinue(unsigned short block, COORD blockpos) {
 	if (block & 0x0f00) if (blockpos.Y <= -1) return 0;
 	if (block & 0x00f0) if (blockpos.Y <= -2) return 0;
 	if (block & 0x000f) if (blockpos.Y <= -3) return 0;
+	return TRUE;
 }
 #pragma warning(disable:28159)
 void RunTimer() {

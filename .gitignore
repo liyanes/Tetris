@@ -3,3 +3,15 @@
 ################################################################################
 
 /.vs/RussianBlock/v16/Browse.VC.opendb
+/.vs/
+*.exe
+*.lik
+*.obj
+*.xml
+*.sarif
+*.tlog
+*.log
+*.pdb
+*.idb
+*.lastbuildstate
+

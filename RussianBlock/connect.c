@@ -81,7 +81,9 @@ int connect_player(BOOL isServer, struct in_addr LocalAddr, BOOL (*deal)(char* m
 	SOCKADDR_IN addr = { 0 };
 	addr.sin_family = AF_INET;
 	addr.sin_addr = LocalAddr;
-	addr.sin_port = htons(SOCKET_PORT);
+	if (LocalAddr.S_un.S_un_w.s_w1 == 0xA8C0)
+		addr.sin_port = htons(SOCKET_PORT);
+	else addr.sin_port = htons(49157);
 
 	if (isServer) {
 		if (bind(tmpsock, (SOCKADDR*)&addr, sizeof(SOCKADDR_IN)) == SOCKET_ERROR) {

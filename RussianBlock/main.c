@@ -1,6 +1,7 @@
 #include "global.h"
 #include "playtime.h"
 #include <Windows.h>
+extern unsigned int grade,blocktime;
 int PaintStartMenu();
 int wmain(int argc, WCHAR** argv) {
 	unsigned int runstate;
@@ -15,6 +16,7 @@ int wmain(int argc, WCHAR** argv) {
 			break;
 		}
 		ClearScr(hOut);
+		grade = blocktime = 0;
 	} while (runstate);
 	Fin(FALSE);
 }

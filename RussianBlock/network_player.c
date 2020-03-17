@@ -71,7 +71,7 @@ BOOL dou_timer(BOOL isFirst) {
 		rectimer = GetTickCount64();
 		return TRUE;
 	}
-	if (GetTickCount64() >= rectimer + JUMPDIFTIME) {
+	if (GetTickCount64() >= rectimer + SLEEPCLOCK) {
 		if (abletoset(curblock, (COORD) { blockpos.X, blockpos.Y + 1 })) {
 			blockpos.Y++; 
 		}
