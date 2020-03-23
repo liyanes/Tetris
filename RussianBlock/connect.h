@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include "global.h"
 #define SOCKET_IP "192.168.1.1"
-#define SOCKET_PORT 782
+#define SOCKET_PORT 14355
 
 #define RUNSTATE_ACCEPT 0
 #define RUNSTATE_CONNECTED 1

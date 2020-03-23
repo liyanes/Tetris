@@ -1,8 +1,8 @@
 #pragma once
 #include <Windows.h>
 
-#define GAMENAME "Russian Block"
-#define GAMELNAME L"Russian Block"
+#define GAMENAME "Tetris"
+#define GAMELNAME L"Tetris"
 
 #define HEIGTH 20
 #define WIDTH 16

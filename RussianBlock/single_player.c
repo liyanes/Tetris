@@ -19,13 +19,14 @@ void RunTimer();
 void ShowEnd();
 BOOL isWin8plus();
 void Sgn_Fin();
+void unlayblock();
 
-unsigned char conblock[WIDTH][HEIGTH] = { 0 };
+unsigned char conblock[WIDTH][HEIGTH];
 unsigned short curblock, nextblock;
 unsigned char blockcolor, nextblockcolor;
 
-unsigned int blocktime = 0;
-unsigned int grade = 0;
+unsigned int blocktime;
+unsigned int grade;
 time_t starttime;
 
 
@@ -49,7 +50,7 @@ void Sgn_Init() {
 
 	ClearScr(hOut);
 
-	sOut = CreateConsoleScreenBuffer(GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+	sOut = CreateConsoleScreenBuffer(GENERIC_WRITE|GENERIC_READ, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	if (sOut == INVALID_HANDLE_VALUE) {
 		puts("CreateConsoleScreenBuffer Function Failed");
 		exit(1);
@@ -60,27 +61,61 @@ void Sgn_Init() {
 }
 void Sgn_Fin() {
 	ClearScr(hOut);
+	ClearScr(sOut);
 	SetStdHandle(STD_OUTPUT_HANDLE, hOut);
 	SetConsoleActiveScreenBuffer(hOut);
 	CloseHandle(sOut);
 }
 void WaitForStart() {
 	unsigned int recnum = wcslen(L"按下任意键开始");
+	SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 	SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 - recnum, 4 });
 	WriteConsole(hOut, L"按下任意键开始", recnum, &recnum, NULL);
 	if (_getch()) return;
 }
 void WaitForContinue() {
-	unsigned int recnum = wcslen(L"按下任意键继续");
-	SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 - recnum, 4 });
-	WriteConsole(hOut, L"按下任意键继续", recnum, &recnum, NULL);
+
+	FlushConsoleInputBuffer(hIn);
+	//unsigned int recnum = wcslen(L"按下任意键继续");
+	//SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 - recnum, 4 });
+	//WriteConsole(hOut, L"按下任意键继续", recnum, &recnum, NULL);
+	CHAR_INFO charinfo[14];unsigned short i;
+	CONSOLE_SCREEN_BUFFER_INFO cinfo;
+	GetConsoleScreenBufferInfo(hOut, &cinfo);
+	ReadConsoleOutputW(hOut, charinfo, (COORD) { 14, 1 }, (COORD) { 0, 0 }, & (SMALL_RECT){WIDTH + 1 - 7, 4, WIDTH + 1 + 7, 4});
+	int ret = GetLastError();
+	charinfo[0].Char.UnicodeChar = L'按';
+	charinfo[1].Char.UnicodeChar = 0;
+	charinfo[2].Char.UnicodeChar = L'下';
+	charinfo[3].Char.UnicodeChar = 0;
+	charinfo[4].Char.UnicodeChar = L'任';
+	charinfo[5].Char.UnicodeChar = 0;
+	charinfo[6].Char.UnicodeChar = L'意';
+	charinfo[7].Char.UnicodeChar = 0;
+	charinfo[8].Char.UnicodeChar = L'键';
+	charinfo[9].Char.UnicodeChar = 0;
+	charinfo[10].Char.UnicodeChar = L'继';
+	charinfo[11].Char.UnicodeChar = 0;
+	charinfo[12].Char.UnicodeChar = L'续';
+	charinfo[13].Char.UnicodeChar = 0;
+	for (i = 0; i <= 13; i++) {
+		if (!charinfo[i].Attributes) charinfo[i].Attributes = FOREGROUND_INTENSITY;
+	}
+	WriteConsoleOutputW(hOut, charinfo, (COORD) { 14, 1 }, (COORD) { 0, 0 }, & (SMALL_RECT){WIDTH + 1 - 7, 4, WIDTH + 1 + 7, 4});
 	if (_getch()) return;
 }
 void ShowEnd() {
+	unsigned int recnum; unsigned short tmpblock = 0;
+	unlayblock();
+	for (recnum = 0; recnum <= 6; recnum++) {
+		exchange(tmpblock, curblock, unsigned short);
+		repaint();
+		Sleep(300);
+	}
+
 	CONSOLE_SCREEN_BUFFER_INFO csinfo;
 	WCHAR buffer[256];
 	GetConsoleScreenBufferInfo(hOut, &csinfo);
-	unsigned int recnum;
 	FillConsoleOutputAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, csinfo.dwSize.X * csinfo.dwSize.Y, (COORD) { 0, 0 }, & recnum);
 	FillConsoleOutputCharacter(hOut, L' ', csinfo.dwSize.X * csinfo.dwSize.Y, (COORD) { 0, 0 }, & recnum);
 	SetConsoleCursorPosition(hOut, (COORD) { 0, 0 });
@@ -102,6 +137,8 @@ void ShowEnd() {
 	SetConsoleTextAttribute(hOut, FOREGROUND_GREEN);
 	swprintf_s(buffer, 256, L"%d\n", blocktime);
 	WriteConsole(hOut, buffer, wcslen(buffer), &recnum, NULL);
+
+	Sleep(1000);
 
 	FlushConsoleInputBuffer(hIn);
 
@@ -135,11 +172,11 @@ void flushfullline(BOOL spe) {
 					//SetConsoleCursorPosition(hOut, (COORD) { WIDTH - 2 * tmpx, line + 1 });
 					//WriteConsole(hOut, L"  ", 2, &recnum, NULL);
 					FillConsoleOutputCharacter(hOut, L' ', 2, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
-					FillConsoleOutputAttribute(hOut, 0, 1, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
+					FillConsoleOutputAttribute(hOut, 0, 2, (COORD) { WIDTH - 2 * tmpx, line + 1 }, & recnum);
 					//SetConsoleCursorPosition(hOut, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 });
 					//WriteConsole(hOut, L"  ", 2, &recnum, NULL);
 					FillConsoleOutputCharacter(hOut, L' ', 2, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
-					FillConsoleOutputAttribute(hOut, 0, 1, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
+					FillConsoleOutputAttribute(hOut, 0, 2, (COORD) { WIDTH + 2 + 2 * tmpx, line + 1 }, & recnum);
 					FlushFileBuffers(hOut);
 					Sleep(20);
 				}
@@ -245,7 +282,6 @@ void repaint() {
 		}
 	}
 	SetConsoleActiveScreenBuffer(sOut);
-	FlushFileBuffers(sOut);
 	exchange(hOut, sOut, HANDLE);
 }
 void spawnrand() {
@@ -288,6 +324,17 @@ void layblock() {
 		for (x = blockpos.X + 3; x >= blockpos.X; x--) {
 			if (curblock & ((0x8000 >> ((y - blockpos.Y) * 4) >> (x - blockpos.X)))) {
 				conblock[x][y] = blockcolor;
+			}
+		}
+	}
+}
+void unlayblock() {
+	short x, y;
+	for (y = blockpos.Y + 3; y >= blockpos.Y; y--) {
+		if (y < 0)break;
+		for (x = blockpos.X + 3; x >= blockpos.X; x--) {
+			if (curblock & ((0x8000 >> ((y - blockpos.Y) * 4) >> (x - blockpos.X)))) {
+				conblock[x][y] = 0;
 			}
 		}
 	}

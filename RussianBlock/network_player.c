@@ -38,6 +38,7 @@ int dou_play() {
 	}
 	Con_Start();
 	WSACleanup();
+	FitScreen((COORD) { 2 * WIDTH + 6, HEIGTH + 3 });
 	return 0;
 }
 
@@ -69,6 +70,7 @@ BOOL dou_timer(BOOL isFirst) {
 		Dou_Init();
 		spawnrand();
 		rectimer = GetTickCount64();
+		FitScreen((COORD) { 4 * WIDTH + 12, HEIGTH + 3 });
 		return TRUE;
 	}
 	if (GetTickCount64() >= rectimer + SLEEPCLOCK) {

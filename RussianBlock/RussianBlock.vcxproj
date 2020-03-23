@@ -23,6 +23,7 @@
     <ProjectGuid>{D8F66577-FC6A-4F51-8089-637EA076B1A7}</ProjectGuid>
     <RootNamespace>RussianBlock</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Tetris</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -153,6 +154,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RussianBlock.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="tetris.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

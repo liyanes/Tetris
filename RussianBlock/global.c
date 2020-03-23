@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 CONSOLE_SCREEN_BUFFER_INFOEX sinfo = { sizeof(CONSOLE_SCREEN_BUFFER_INFOEX) };
+CONSOLE_FONT_INFOEX finfo = {sizeof(finfo)};
 WCHAR title[MAX_PATH];
 DWORD mode;
 COORD blockpos;
@@ -39,7 +40,7 @@ void Fin(BOOL isErr) {
 	SetConsoleScreenBufferInfoEx(hOut, &sinfo);
 	SetConsoleCursorInfo(hOut, &(CONSOLE_CURSOR_INFO){1, 1});
 	SetConsoleMode(hIn, mode);
-
+	SetCurrentConsoleFontEx(hOut, FALSE, &finfo);
 	if (!isErr) {
 		SetWindowLong(hWindow, GWL_STYLE, SavedLong);
 		SetWindowPos(hWindow, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
@@ -56,7 +57,7 @@ void Init() {
 	hIn = GetStdHandle(STD_INPUT_HANDLE);
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hWindow = GetConsoleWindow();
-
+	GetCurrentConsoleFontEx(hOut, FALSE, &finfo); 
 	if (!GetConsoleScreenBufferInfoEx(hOut, &sinfo)) memset(&sinfo, 0, sizeof(sinfo));
 	SetConsoleCursorInfo(hOut, &(CONSOLE_CURSOR_INFO){1, 0});
 	SetConsoleCursorPosition(hOut, (COORD) { 0, 0 });
@@ -130,7 +131,8 @@ unsigned int GetBlockInfo(COORD blockpos, unsigned short block) {
 		if (block & 0x1111) return (blockpos.X + 2) << 8 | 2;
 		return (blockpos.X + 2) << 8 | 1;
 	}
-	return (blockpos.X + 3) << 8 | 1;
+	if (block) return (blockpos.X + 3) << 8 | 1;
+	return blockpos.X << 8;
 }
 
 void ClearScr(HANDLE hOut) {
