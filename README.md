@@ -1,4 +1,4 @@
-# RussianBlock
+# Tetris
 俄罗斯方块-命令行版本
 
 __Language:Chinese__
