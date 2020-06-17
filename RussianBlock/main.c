@@ -8,12 +8,11 @@ extern unsigned char conblock[WIDTH][HEIGTH];
 
 int PaintStartMenu();
 void showabout();
-void FitScreen(COORD);
 
 int wmain(int argc, WCHAR** argv) {
 	unsigned int runstate;
 	Init();
-	FitScreen((COORD) { 2 * WIDTH + 6, HEIGTH + 3 });
+	FitScreen((COORD) { 2 * WIDTH + 6, HEIGTH + 3 },hOut);
 	do {
 		grade = blocktime = (unsigned)(starttime = 0);
 		memset(conblock, 0, WIDTH * HEIGTH);
@@ -76,7 +75,7 @@ int PaintStartMenu() {
 	}
 }
 
-void FitScreen(COORD size) {
+void FitScreen(COORD size,HANDLE hOut) {
 	HWND hwnd = GetConsoleWindow();
 	unsigned cx = GetSystemMetrics(SM_CXSCREEN);            /* ÆÁÄ»¿í¶È */
 	unsigned cy = GetSystemMetrics(SM_CYSCREEN);            /* ÆÁÄ»¸ß¶È */

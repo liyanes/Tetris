@@ -54,7 +54,7 @@ static unsigned _stdcall connect_player_sac(void* pArguments) {
 	}
 }
 
-struct in_addr* GetLocalIP()
+struct in_addr** GetLocalIP()
 {
 	char szHostName[MAX_PATH] = { 0 };
 	int nRetCode;
@@ -64,7 +64,7 @@ struct in_addr* GetLocalIP()
 		return NULL;
 	}
 	hostinfo = gethostbyname(szHostName);
-	return (struct in_addr*) * hostinfo->h_addr_list;
+	return (struct in_addr**) (hostinfo->h_addr_list);
 }
 #pragma warning(disable:6387)
 #pragma warning(disable:6001)

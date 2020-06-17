@@ -3,6 +3,7 @@
 #include "connect.h"
 #include <stdio.h>
 #include <conio.h>
+#include <math.h>
 #include <Windows.h>
 #pragma comment(lib,"ws2_32.lib")
 
@@ -38,7 +39,7 @@ int dou_play() {
 	}
 	Con_Start();
 	WSACleanup();
-	FitScreen((COORD) { 2 * WIDTH + 6, HEIGTH + 3 });
+	FitScreen((COORD) { 2 * WIDTH + 6, HEIGTH + 3 },hOut);
 	return 0;
 }
 
@@ -70,7 +71,7 @@ BOOL dou_timer(BOOL isFirst) {
 		Dou_Init();
 		spawnrand();
 		rectimer = GetTickCount64();
-		FitScreen((COORD) { 4 * WIDTH + 12, HEIGTH + 3 });
+		FitScreen((COORD) { 4 * WIDTH + 12, HEIGTH + 3 },hOut);
 		return TRUE;
 	}
 	if (GetTickCount64() >= rectimer + SLEEPCLOCK) {
@@ -97,11 +98,18 @@ int Con_Start() {
 	ClearScr(hOut);
 	WCHAR wch[16] = { 0 }; DWORD recnum;
 	char readip[16] = { 0 };
-	struct in_addr addrin = *GetLocalIP();
-	wsprintf(wch, L"%d.%d.%d.%d", addrin.S_un.S_un_b.s_b1, addrin.S_un.S_un_b.s_b2, addrin.S_un.S_un_b.s_b3, addrin.S_un.S_un_b.s_b4);
-	SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-	WriteConsole(hOut, L"你的局域网IP:", wcslen(L"你的局域网IP:"), &recnum, NULL);
-	WriteConsole(hOut, wch, 15, &recnum, NULL);
+	struct in_addr** addrins = GetLocalIP(),**saddrins = addrins;
+	if (!*addrins) {
+		WriteConsoleW(hOut, L"并没有检测到网络,请检测防火墙或者网络设置\n任意键继续...",wcslen(L"并没有检测到网络,请检测防火墙或者网络设置\n任意键继续..."),&recnum,NULL);
+		if (_getch());
+		return 1;
+	}
+	WriteConsole(hOut, L"你的局域网IP:\n", wcslen(L"你的局域网IP:\n"), &recnum, NULL);
+	do {
+		wsprintf(wch, L"%d.%d.%d.%d\n", (**addrins).S_un.S_un_b.s_b1, (**addrins).S_un.S_un_b.s_b2, (**addrins).S_un.S_un_b.s_b3, (**addrins).S_un.S_un_b.s_b4);
+		SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+		WriteConsole(hOut, wch, wcslen(wch), &recnum, NULL);
+	} while (*++addrins);
 	WriteConsole(hOut, L"\n请输入连接IP地址\n(如果是服务器则无需输入,退出请输入exit)\n>", wcslen(L"\n请输入连接IP地址\n(如果是服务器则无需输入,退出请输入exit)\n>"), &recnum, NULL);
 	while (1) {
 		fgets(readip, 16, stdin);
@@ -109,10 +117,12 @@ int Con_Start() {
 			puts("请输入正确的IP地址");
 			continue;
 		}
+		struct in_addr addr;
 		if (readip[0] == '\n') {
 			puts("连接中...");
 			spawnrand();
-			int ret = connect_player(TRUE, addrin, dou_msg, dou_deal, dou_timer);
+			addr = **saddrins;
+			int ret = connect_player(TRUE, addr, dou_msg, dou_deal, dou_timer);
 			if (ret) {
 				printf("错误发生:%d\n任意键退出", ret);
 				if (_getch());
@@ -129,13 +139,13 @@ int Con_Start() {
 			puts("格式化失败");
 			continue;
 		}
-		addrin.S_un.S_un_b.s_b1 = (BYTE)ipaddr[0];
-		addrin.S_un.S_un_b.s_b2 = (BYTE)ipaddr[1];
-		addrin.S_un.S_un_b.s_b3 = (BYTE)ipaddr[2];
-		addrin.S_un.S_un_b.s_b4 = (BYTE)ipaddr[3];
+		addr.S_un.S_un_b.s_b1 = (BYTE)ipaddr[0];
+		addr.S_un.S_un_b.s_b2 = (BYTE)ipaddr[1];
+		addr.S_un.S_un_b.s_b3 = (BYTE)ipaddr[2];
+		addr.S_un.S_un_b.s_b4 = (BYTE)ipaddr[3];
 		puts("连接中(按q退出连接)");
 		spawnrand();
-		int ret = connect_player(FALSE, addrin, dou_msg, dou_deal,dou_timer);
+		int ret = connect_player(FALSE, addr, dou_msg, dou_deal,dou_timer);
 		if (ret) {
 			printf("错误发生:%d\n任意键退出", ret);
 			if (_getch());

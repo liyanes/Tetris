@@ -11,5 +11,5 @@
 extern SOCKET sock;
 extern char recvmsg[MSG_LEN + 1];
 
-struct in_addr* GetLocalIP();
+struct in_addr** GetLocalIP();
 int connect_player(BOOL isServer, struct in_addr, BOOL(*deal)(char* message, unsigned int runstate), BOOL(*state)(INPUT_RECORD inp,unsigned int runstate), BOOL(*timer)(BOOL));

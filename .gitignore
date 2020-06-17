@@ -4,6 +4,12 @@
 
 /.vs/RussianBlock/v16/Browse.VC.opendb
 /.vs/
+/Debug/
+/Release/
+/x64/
+/RussianBlock/Debug/
+/RussianBlock/Release/
+/RussianBlock/x64/
 *.exe
 *.lik
 *.obj
@@ -14,4 +20,6 @@
 *.pdb
 *.idb
 *.lastbuildstate
-
+*.ilk
+*.iobj
+*.ipdb

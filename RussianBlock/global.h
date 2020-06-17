@@ -35,3 +35,4 @@ unsigned char randcolor();
 unsigned short aclockwise(unsigned short clock, unsigned short times);
 unsigned int GetBlockInfo(COORD blockpos, unsigned short block);
 void ClearScr(HANDLE hOut);
+void FitScreen(COORD, HANDLE);
